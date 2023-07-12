@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SavEvent</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Eventos Salvos</h1>
+    <a class="btn btn-primary" href="/eventossalvos">Resetar filtragem</a>
+    <form class="mb-3" action="/eventossalvos/buscar" method="POST">
+      <div class="input-group">
+        <input type="text" class="form-control" name="busca" placeholder="Buscar eventos...">
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="submit">Buscar</button>
+        </div>
+      </div>
+    </form>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Data de Início</th>
+          <th>Data de Término</th>
+          <th>Descrição</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% eventos.forEach((evento) => { %>
+          <tr>
+            <td><%= evento.titulo %></td>
+            <td><%= evento.dataInicio ? evento.dataInicio.toISOString().substring(0, 10) : '' %></td>
+            <td><%= evento.dataFim ? evento.dataFim.toISOString().substring(0, 10) : '' %></td>
+            <td><%= evento.descricao %></td>
+            <td><%= evento.localizacao.latitude %></td>
+            <td><%= evento.localizacao.longitude %></td>
+            <td>
+              <form method="POST" action="/excluirevento/<%= evento._id %>">
+                <button type="submit" class="btn btn-danger">Excluir</button>
+                <a class="btn btn-primary" href="/editarevento/<%= evento._id %>"> Editar </a>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+      <a class="btn btn-primary"  href="/">Novo Evento</a>
+      <hr>
+      <a class="btn btn-primary" href="/">Voltar</a>
+    </table>
+  </div>
+</body>
+</html>

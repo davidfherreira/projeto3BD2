@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SavEvent</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>SavEvent</h1>
+    <div class="alert alert-info" role="alert">
+      <strong>Como cadastrar um evento =></strong> Clique no mapa para adicionar um marcador e preencha o formulário abaixo com as informações do evento e em seguida clique no botão 'Salvar Evento'.
+    </div>
+    <div class="btn">
+      <% if (nomeUsuario) { %>
+        <p><strong> <h2>Olá <%= nomeUsuario %> </h2></strong></p>
+        <a class="btn btn-primary" href="/logout">Fazer logout</a>
+      <% } else { %>
+        <p><strong>Você não está logado!</strong></p>
+        <a class="btn btn-primary" href="/login">Fazer login</a>
+      <% } %>
+    </div>
+    <div id="map" style="height: 400px;"></div>
+    <form method="POST" action="/salvarevento">
+      <div class="form-group">
+        <label for="titulo">Título</label>
+        <input type="text" class="form-control" id="titulo" name="titulo" required>
+      </div>
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <textarea class="form-control" id="descricao" name="descricao" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="dataInicio">Data de Início</label>
+        <input type="date" class="form-control" id="dataInicio" name="dataInicio" required>
+      </div>
+      <div class="form-group">
+        <label for="dataFim">Data de Término</label>
+        <input type="date" class="form-control" id="dataFim" name="dataFim" required>
+      </div>
+      <input type="hidden" id="latitude" name="latitude" required>
+      <input type="hidden" id="longitude" name="longitude" required>
+      <button type="submit" class="btn btn-primary">Salvar Evento</button>
+      <a href="/eventossalvos" class="btn btn-primary">Eventos Salvos</a>
+    </form>
+  </div>
+  <script>
+    var map;
+    var marker;
+    var latitudeInput = document.getElementById('latitude');
+    var longitudeInput = document.getElementById('longitude');
+    
+    function curtirEvento(eventoId, curtirButton) {
+      fetch('/curtir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ eventoId })
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data.message);
+          curtirButton.disabled = true;
+          curtirButton.innerText = 'Curtido';
+        })
+        .catch(error => {
+          console.error('Erro ao curtir o evento:', error);
+        });
+    }
+
+    function verificarEventoCurtido(eventoId, curtirButton) {
+      return fetch('/verificar-curtida', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ eventoId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.curtido) {
+          curtirButton.disabled = true;
+          curtirButton.innerText = 'Curtido';
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao verificar curtida:', error);
+      });
+    }
+
+    function initMap() {
+      // Inicializar o mapa
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -6.76782, lng: -38.2099 },
+        zoom: 14
+      });
+
+      // Adicionar um listener para o evento de clique no mapa
+      map.addListener('click', function(event) {
+        // Remover marcador existente, se houver
+        if (marker) {
+          marker.setMap(null);
+        }
+
+        // Adicionar um novo marcador no local clicado
+        marker = new google.maps.Marker({
+          position: event.latLng,
+          map: map,
+          draggable: true // Permitir arrastar o marcador
+        });
+
+        // Atualizar os campos ocultos com as coordenadas do novo marcador
+        latitudeInput.value = event.latLng.lat();
+        longitudeInput.value = event.latLng.lng();
+
+        // Adicionar um listener para o evento de arrastar o marcador
+        marker.addListener('dragend', function(event) {
+          latitudeInput.value = event.latLng.lat();
+          longitudeInput.value = event.latLng.lng();
+        });
+      });
+
+      // Fazer a solicitação HTTP para buscar os eventos salvos
+      fetch('/eventos')
+        .then(response => response.json())
+        .then(eventos => {
+          eventos.forEach(evento => {
+            const { localizacao: { latitude, longitude }, titulo } = evento;
+            const marker = new google.maps.Marker({
+              position: { lat: parseFloat(latitude), lng: parseFloat(longitude) },
+              map: map,
+              title: titulo,
+              id: evento._id,
+            });
+
+            const infoWindow = new google.maps.InfoWindow();
+            const curtirButton = document.createElement('button');
+            curtirButton.innerText = 'Curtir';
+
+            marker.addListener('click', function() {
+              infoWindow.setContent(`<div><h4>${titulo}</h4></div><button class="btn btn-primary" onclick="curtirEvento('${evento._id}', this)">Curtir</button>`);
+              infoWindow.open(map, marker);
+
+              verificarEventoCurtido(evento._id, curtirButton)
+                .then(() => {
+                  fetch('/recomendar', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ eventoId: evento._id })
+                  })
+                  .then(response => response.json())
+                  .then(eventosRecomendados => {
+                    if (eventosRecomendados.length > 0) {
+                      // Exibir os eventos recomendados na janela de informações
+                      const recomendedEventsDiv = document.createElement('div');
+                      recomendedEventsDiv.innerHTML = '<h4>Pessoas que curtiram esse, também curtiram:</h4>';
+                      eventosRecomendados.forEach(eventoRecomendado => {
+                        const recomendedEvent = document.createElement('p');
+                        recomendedEvent.innerText = eventoRecomendado.titulo;
+                        recomendedEventsDiv.appendChild(recomendedEvent);
+                      });
+                      infoWindow.setContent(`<div><h3>${titulo}</h3></div>${recomendedEventsDiv.innerHTML}`);
+                    } else {
+                      infoWindow.setContent(`<div>${titulo}</div>`);
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Erro ao buscar eventos recomendados:', error);
+                  });
+                })
+                .catch(error => {
+                  console.error('Erro ao verificar curtida:', error);
+                });
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Erro ao buscar eventos:', error);
+        });
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=<%=process.env.GOOGLE_MAPS_API_KEY%>&callback=initMap" async defer></script>
+</body>
+</html>

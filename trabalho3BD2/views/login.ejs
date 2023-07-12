@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SavEvent</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Fazer login</h1>
+    <div class="alert alert-info" role="alert">
+      <strong>Ainda não possui conta?</strong> Clique no botão 'Cadastre-se', para realizar seu cadastro.
+    </div>
+    <form action="/login" method="POST">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input class="form-control" id="email" name="email" rows="3">
+      </div>
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input class="form-control" type="password" id="senha" name="senha" rows="3">
+      </div>
+      <button type="submit" class="btn btn-primary">Logar</button>
+      <a href="/" class="btn btn-primary">Cancelar</a>
+      <a href="/cadastrarusuario" class="btn btn-primary">Cadastre-se</a>
+      </div>
+   </div>
+    </form>
+  </div>
+</body>
+</html>

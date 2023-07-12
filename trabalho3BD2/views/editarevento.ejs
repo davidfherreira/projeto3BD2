@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SavEvent</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Editar Evento</h1>
+    <form action="/atualizarevento/<%= evento._id %>" method="POST">
+      <div class="form-group">
+        <label for="titulo">Título</label>
+        <input type="text" class="form-control" id="titulo" name="titulo" value="<%= evento.titulo %>" required>
+      </div>
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <textarea class="form-control" id="descricao" name="descricao" rows="3" required><%= evento.descricao %></textarea>
+      </div>
+      <div class="form-group">
+        <label for="dataInicio">Data de Início</label>
+        <input type="date" class="form-control" id="dataInicio" name="dataInicio" value="<%= evento.dataInicio %>" required>
+      </div>
+      <div class="form-group">
+        <label for="dataFim">Data de Término</label>
+        <input type="date" class="form-control" id="dataFim" name="dataFim" value="<%= evento.dataFim %>" required>
+      </div>
+      <div class="form-group">
+        <label for="latitude">Latitude</label>
+        <input type="text" class="form-control" id="latitude" name="latitude" value="<%= evento.localizacao.latitude %>" required>
+      </div>
+      <div class="form-group">
+        <label for="longitude">Longitude</label>
+        <input type="text" class="form-control" id="longitude" name="longitude" value="<%= evento.localizacao.longitude %>" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    </form>
+    <a href="/eventossalvos" class="btn btn-primary">Cancelar</a>
+  </div>
+</body>
+</html>
